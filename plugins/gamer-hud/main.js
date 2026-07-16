@@ -9,6 +9,16 @@ const diskValue = document.getElementById('disk-value');
 const tempFill = document.getElementById('temp-fill');
 const tempValue = document.getElementById('temp-value');
 const footer = document.getElementById('footer-detail');
+const closeBtn = document.getElementById('close-btn');
+
+closeBtn.addEventListener('click', async (event) => {
+  event.stopPropagation();
+  try {
+    await invoke('hide_window');
+  } catch (err) {
+    console.error('no se pudo ocultar la ventana:', err);
+  }
+});
 
 async function refresh() {
   try {

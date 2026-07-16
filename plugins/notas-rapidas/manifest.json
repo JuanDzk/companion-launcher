@@ -1,0 +1,11 @@
+{
+  "id": "notas-rapidas",
+  "name": "Notas Rápidas",
+  "entry": "index.html",
+  "width": 380,
+  "height": 480,
+  "transparent": false,
+  "always_on_top": false,
+  "decorations": false,
+  "tray_entry": true
+}

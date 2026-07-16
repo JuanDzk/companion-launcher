@@ -70,6 +70,11 @@ fn get_system_metrics() -> SystemMetrics {
     }
 }
 
+#[tauri::command]
+fn hide_window(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.hide().map_err(|e| e.to_string())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -79,6 +84,7 @@ fn main() {
             plugin_loader::list_plugins,
             plugin_loader::open_plugin_window,
             plugin_loader::snap_to_corner,
+            hide_window,
             db::db_get,
             db::db_set,
         ])

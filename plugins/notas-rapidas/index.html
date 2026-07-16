@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Notas Rápidas</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar" data-tauri-drag-region>
+      <span class="titlebar-label" data-tauri-drag-region>Notas Rápidas</span>
+      <button class="close-btn" id="close-btn" title="Ocultar">×</button>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="search-input" placeholder="Buscar..." />
+    </div>
+
+    <form id="new-note-form" class="new-note-form">
+      <textarea id="new-note-text" placeholder="Escribe una nota y presiona Enter..." rows="2"></textarea>
+    </form>
+
+    <div class="notes-list" id="notes-list">
+      <div class="empty-state" id="empty-state">Sin notas todavía. Escribe la primera arriba.</div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
