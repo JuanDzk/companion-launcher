@@ -1,0 +1,140 @@
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::PathBuf;
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+
+// Contrato del plugin. Cada carpeta en /plugins debe traer un manifest.json
+// con esta forma. Cualquier campo nuevo que agreguemos después debe tener
+// un default para no romper plugins viejos.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PluginManifest {
+    pub id: String,
+    pub name: String,
+    pub entry: String, // archivo html de entrada, relativo a la carpeta del plugin
+    #[serde(default = "default_width")]
+    pub width: f64,
+    #[serde(default = "default_height")]
+    pub height: f64,
+    #[serde(default)]
+    pub transparent: bool,
+    #[serde(default)]
+    pub always_on_top: bool,
+    #[serde(default)]
+    pub decorations: bool,
+    #[serde(default)]
+    pub tray_entry: bool, // si aparece como opción en el menú del tray
+}
+
+fn default_width() -> f64 {
+    360.0
+}
+fn default_height() -> f64 {
+    240.0
+}
+
+fn plugins_dir() -> PathBuf {
+    // En dev, /plugins vive junto al proyecto. En producción empaquetada,
+    // se resuelve junto al ejecutable (ver tauri.conf.json -> resources si luego lo empaquetas).
+    PathBuf::from("../plugins")
+}
+
+pub fn discover() -> Vec<PluginManifest> {
+    let dir = plugins_dir();
+    let mut found = Vec::new();
+
+    let entries = match fs::read_dir(&dir) {
+        Ok(e) => e,
+        Err(_) => return found, // sin carpeta de plugins, sin problema: 0 plugins
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let manifest_path = path.join("manifest.json");
+        if !manifest_path.exists() {
+            continue;
+        }
+        match fs::read_to_string(&manifest_path) {
+            Ok(contents) => match serde_json::from_str::<PluginManifest>(&contents) {
+                Ok(manifest) => found.push(manifest),
+                Err(e) => eprintln!("manifest inválido en {:?}: {e}", manifest_path),
+            },
+            Err(e) => eprintln!("no se pudo leer {:?}: {e}", manifest_path),
+        }
+    }
+
+    found
+}
+
+#[tauri::command]
+pub fn list_plugins() -> Vec<PluginManifest> {
+    discover()
+}
+
+#[tauri::command]
+pub fn open_plugin_window(app: AppHandle, plugin_id: String) -> Result<(), String> {
+    let manifest = discover()
+        .into_iter()
+        .find(|p| p.id == plugin_id)
+        .ok_or_else(|| format!("plugin '{plugin_id}' no encontrado"))?;
+
+    // Si la ventana ya existe, solo la mostramos/enfocamos en vez de duplicarla.
+    if let Some(win) = app.get_webview_window(&manifest.id) {
+        win.show().map_err(|e| e.to_string())?;
+        win.set_focus().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+
+    let url = WebviewUrl::App(format!("{}/{}", manifest.id, manifest.entry).into());
+
+    WebviewWindowBuilder::new(&app, &manifest.id, url)
+        .title(&manifest.name)
+        .inner_size(manifest.width, manifest.height)
+        .position(40.0, 40.0)
+        .transparent(manifest.transparent)
+        .always_on_top(manifest.always_on_top)
+        .decorations(manifest.decorations)
+        .skip_taskbar(true)
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn snap_to_corner(window: tauri::WebviewWindow, corner: String) -> Result<(), String> {
+    let monitor = window
+        .current_monitor()
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "no se pudo detectar el monitor".to_string())?;
+
+    let monitor_pos = monitor.position();
+    let monitor_size = monitor.size();
+    let window_size = window.outer_size().map_err(|e| e.to_string())?;
+    let margin: i32 = 20;
+
+    let (x, y) = match corner.as_str() {
+        "top-left" => (monitor_pos.x + margin, monitor_pos.y + margin),
+        "top-right" => (
+            monitor_pos.x + monitor_size.width as i32 - window_size.width as i32 - margin,
+            monitor_pos.y + margin,
+        ),
+        "bottom-left" => (
+            monitor_pos.x + margin,
+            monitor_pos.y + monitor_size.height as i32 - window_size.height as i32 - margin,
+        ),
+        "bottom-right" => (
+            monitor_pos.x + monitor_size.width as i32 - window_size.width as i32 - margin,
+            monitor_pos.y + monitor_size.height as i32 - window_size.height as i32 - margin,
+        ),
+        other => return Err(format!("esquina desconocida: {other}")),
+    };
+
+    window
+        .set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }))
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gamer HUD</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="hud" id="drag-region" data-tauri-drag-region>
+    <div class="stat">
+      <span class="label">CPU</span>
+      <div class="bar-track">
+        <div class="bar-fill cpu" id="cpu-fill"></div>
+      </div>
+      <span class="value" id="cpu-value">0%</span>
+    </div>
+
+    <div class="stat">
+      <span class="label">RAM</span>
+      <div class="bar-track">
+        <div class="bar-fill ram" id="ram-fill"></div>
+      </div>
+      <span class="value" id="ram-value">0%</span>
+    </div>
+
+    <div class="stat">
+      <span class="label">DISK</span>
+      <div class="bar-track">
+        <div class="bar-fill disk" id="disk-fill"></div>
+      </div>
+      <span class="value" id="disk-value">0%</span>
+    </div>
+
+    <div class="stat">
+      <span class="label">TEMP</span>
+      <div class="bar-track">
+        <div class="bar-fill temp" id="temp-fill"></div>
+      </div>
+      <span class="value" id="temp-value">--°C</span>
+    </div>
+
+    <div class="footer" id="footer-detail">-- MB / -- MB</div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

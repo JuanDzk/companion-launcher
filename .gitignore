@@ -1,0 +1,25 @@
+# Rust / Cargo
+/src-tauri/target/
+**/*.rs.bk
+*.pdb
+
+# Node
+/node_modules/
+npm-debug.log*
+
+# Tauri
+/src-tauri/gen/
+
+# Datos locales (SQLite del core, no debe subirse — es estado, no código)
+core.db
+*.db
+*.db-journal
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp

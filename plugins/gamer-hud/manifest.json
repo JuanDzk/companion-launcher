@@ -1,0 +1,11 @@
+{
+  "id": "gamer-hud",
+  "name": "Gamer HUD",
+  "entry": "index.html",
+  "width": 300,
+  "height": 230,
+  "transparent": true,
+  "always_on_top": true,
+  "decorations": false,
+  "tray_entry": true
+}
