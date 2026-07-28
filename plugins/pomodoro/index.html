@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pomodoro</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="card" id="drag-region" data-tauri-drag-region>
+    <button class="close-btn" id="close-btn" title="Ocultar">×</button>
+
+    <div class="mode-label" id="mode-label">ENFOQUE</div>
+
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 120 120">
+        <circle class="ring-track" cx="60" cy="60" r="52" />
+        <circle class="ring-progress" id="ring-progress" cx="60" cy="60" r="52" />
+      </svg>
+      <div class="time-display" id="time-display">25:00</div>
+    </div>
+
+    <div class="settings">
+      <label>
+        Enfoque
+        <span class="stepper">
+          <input type="number" id="work-input" min="1" max="600" value="25" />
+          <span class="stepper-btns">
+            <button class="step-btn step-up" data-target="work-input">▲</button>
+            <button class="step-btn step-down" data-target="work-input">▼</button>
+          </span>
+        </span>
+        min
+      </label>
+      <label>
+        Descanso
+        <span class="stepper">
+          <input type="number" id="break-input" min="1" max="120" value="5" />
+          <span class="stepper-btns">
+            <button class="step-btn step-up" data-target="break-input">▲</button>
+            <button class="step-btn step-down" data-target="break-input">▼</button>
+          </span>
+        </span>
+        min
+      </label>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn primary" id="start-pause-btn">Iniciar</button>
+      <button class="ctrl-btn" id="reset-btn">Reiniciar</button>
+    </div>
+
+    <div class="footer" id="stats-footer">0 pomodoros hoy</div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

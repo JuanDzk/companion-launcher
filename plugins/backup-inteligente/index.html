@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Backup Inteligente</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar" data-tauri-drag-region>
+      <span class="titlebar-label" data-tauri-drag-region>Backup Inteligente</span>
+      <button class="close-btn" id="close-btn" title="Ocultar">×</button>
+    </div>
+
+    <!-- Solo se muestra la primera vez, mientras no haya credenciales guardadas -->
+    <div class="setup-form" id="setup-form" style="display: none;">
+      <p class="setup-hint">Carpeta donde viven tus proyectos (solo se pide una vez).</p>
+      <input type="text" id="watch-root" placeholder="/mnt/Juegos/PROYECTOS" />
+
+      <p class="setup-hint">Repo privado de GitHub donde se guardan los backups (debes crearlo tú, vacío, una vez).</p>
+      <input type="text" id="gh-repo" placeholder="tu-usuario/zudok-backups" />
+
+      <p class="setup-hint">Token de acceso de GitHub, con permiso de "Contents" solo sobre ese repo.</p>
+      <input type="password" id="gh-token" placeholder="ghp_..." />
+      <button id="setup-save">Guardar y continuar</button>
+      <p class="status-msg" id="setup-status"></p>
+    </div>
+
+    <div class="main-view" id="main-view" style="display: none;">
+      <p class="section-label">Proyectos detectados</p>
+      <div class="projects-list" id="projects-list"></div>
+      <button id="backup-btn" class="backup-btn">Respaldar ahora</button>
+      <p class="status-msg" id="status-msg"></p>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: transparent;
+  font-family: 'IBM Plex Mono', 'Consolas', monospace;
+  user-select: none;
+  overflow: hidden;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 12, 16, 0.78);
+  border: 1px solid rgba(120, 200, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.card:hover .close-btn {
+  opacity: 1;
+}
+
+.close-btn:hover {
+  background: rgba(255, 95, 95, 0.25);
+  color: #fff;
+}
+
+.mode-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(255, 159, 90, 0.85);
+}
+
+.mode-label.break {
+  color: rgba(120, 220, 180, 0.85);
+}
+
+.ring-wrap {
+  position: relative;
+  width: 130px;
+  height: 130px;
+}
+
+.ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 8;
+}
+
+.ring-progress {
+  fill: none;
+  stroke: #ff9f5a;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 326.7;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+}
+
+.ring-progress.break {
+  stroke: #78dcb4;
+}
+
+.time-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.settings {
+  display: flex;
+  gap: 14px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.settings label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.settings input {
+  width: 34px;
+  padding: 3px 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px 0 0 5px;
+  border-right: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: inherit;
+  font-size: 10px;
+  text-align: center;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.settings input::-webkit-outer-spin-button,
+.settings input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.settings input:focus {
+  border-color: rgba(255, 159, 90, 0.5);
+}
+
+.settings input:disabled {
+  opacity: 0.4;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.stepper-btns {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0 5px 5px 0;
+  overflow: hidden;
+}
+
+.step-btn {
+  width: 14px;
+  height: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 6px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.step-btn:first-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.step-btn:hover {
+  background: rgba(255, 159, 90, 0.25);
+  color: #fff;
+}
+
+.step-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.ctrl-btn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.ctrl-btn.primary {
+  background: rgba(255, 159, 90, 0.18);
+  border-color: rgba(255, 159, 90, 0.4);
+}
+
+.ctrl-btn.primary:hover {
+  background: rgba(255, 159, 90, 0.28);
+}
+
+.footer {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.35);
+}

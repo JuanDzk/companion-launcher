@@ -4,9 +4,6 @@ Shell de escritorio extensible, con arquitectura de plugins, construido en **Rus
 Vive en la bandeja del sistema, no ocupa espacio en la barra de tareas, y cada funcionalidad
 nueva se agrega como un plugin independiente sin tocar el núcleo de la aplicación.
 
-Primer plugin incluido: **Gamer HUD** — un widget flotante y semitransparente, estilo overlay
-de videojuego, que muestra CPU, RAM, disco y temperatura en tiempo real.
-
 ## ✨ Motivación
 
 La mayoría de mis proyectos anteriores fueron páginas web corriendo en `localhost`. Este
@@ -14,10 +11,10 @@ proyecto nace de querer dar el salto a **aplicaciones nativas de escritorio de v
 ejecutable propio, ícono en el sistema, ejecución en segundo plano — sin sacrificar que siga
 siendo mantenible y fácil de extender con el tiempo.
 
-En vez de construir 6 mini-apps sueltas (una por cada idea), se diseñó un **core reutilizable**
-que resuelve una sola vez los problemas comunes (ícono de bandeja, atajo global, base de datos
-compartida, ciclo de vida de ventanas) para que cada nueva funcionalidad futura sea solo un
-plugin más.
+En vez de construir varias mini-apps sueltas (una por cada idea), se diseñó un **core
+reutilizable** que resuelve una sola vez los problemas comunes (ícono de bandeja, atajo
+global, base de datos compartida, ciclo de vida de ventanas) para que cada nueva
+funcionalidad futura sea solo un plugin más.
 
 ## 🧱 Arquitectura
 
@@ -28,15 +25,15 @@ companion-launcher/
 │   │   ├── main.rs             → arranca la app, expone comandos, registra atajo global
 │   │   ├── db.rs                → SQLite compartida (kv_store con namespace por plugin)
 │   │   ├── plugin_loader.rs    → descubre plugins, crea/posiciona sus ventanas
-│   │   └── tray.rs             → ícono de bandeja + menú dinámico según plugins detectados
+│   │   ├── tray.rs             → ícono de bandeja + menú dinámico según plugins detectados
+│   │   └── backup.rs           → lógica del plugin Backup Inteligente (ver más abajo)
 │   ├── Cargo.toml
 │   └── tauri.conf.json
 └── plugins/
-    └── gamer-hud/           ← primer plugin
-        ├── manifest.json        → contrato: tamaño, transparencia, always_on_top, etc.
-        ├── index.html
-        ├── style.css
-        └── main.js              → consume el comando get_system_metrics cada 1.5s
+    ├── gamer-hud/
+    ├── notas-rapidas/
+    ├── pomodoro/
+    └── backup-inteligente/
 ```
 
 ### El contrato del plugin
@@ -79,25 +76,20 @@ permisos (capabilities) de Tauri 2 bloquea las llamadas nativas de ventana desde
 sin configuración adicional. `hide_window` evita ese problema porque es un comando propio,
 registrado en nuestro `invoke_handler`, y por lo tanto no necesita permisos extra.
 
-```js
-document.getElementById('close-btn').addEventListener('click', async () => {
-  await invoke('hide_window');
-});
-```
-
 ### Mover cualquier ventana del launcher
 
 Ninguna ventana de plugin tiene barra de título ni aparece en la barra de tareas, así que se
 reposicionan sosteniendo **Win (Meta) + clic izquierdo** en cualquier punto de la ventana y
-arrastrando — es un atajo nativo de KDE Plasma que mueve ventanas sin decoración, sin
-depender del `data-tauri-drag-region` de cada plugin ni de tener un ícono en la barra de
-tareas para hacerlo.
+arrastrando — es un atajo nativo de KDE Plasma que mueve ventanas sin decoración.
 
 ## 🛠️ Stack
 
 - **Rust** + **Tauri 2** — shell nativo, liviano comparado con soluciones basadas en Electron
 - **sysinfo** — lectura de métricas de sistema (CPU, RAM, disco, sensores de temperatura)
 - **rusqlite (SQLite embebida)** — persistencia local compartida entre plugins
+- **keyring** — credenciales sensibles guardadas en el almacén del sistema (KWallet/Secret
+  Service), nunca en la SQLite de la app
+- **reqwest + zip** — compresión de proyectos y subida a la API de GitHub (Backup Inteligente)
 - **HTML / CSS / JS vanilla** — interfaz de cada plugin, sin build step ni framework
 
 ## 🚀 Instalación y ejecución
@@ -133,41 +125,29 @@ cargo tauri build
 
 Genera un `.AppImage` y un `.deb` en `src-tauri/target/release/bundle/`.
 
-### Revisar el consumo de RAM en caliente
-
-```bash
-ps -o pid,rss,vsz,cmd -C companion
-```
-
-`RSS` es la memoria física real en uso (en KB, dividir entre 1024 para MB).
-
 ## 🧩 Retos técnicos y cómo se resolvieron
 
 Documentar esto porque el camino real casi nunca es lineal, y creo que vale más mostrarlo
 que esconderlo:
 
 - **Cambios de API entre versiones de crates.** `sysinfo` cambió el nombre de su método de
-  CPU global entre versiones (`global_cpu_usage` → `global_cpu_info().cpu_usage()`), y la API
-  de menús de Tauri 2 no es encadenable (`Menu::append` devuelve `Result<()>`, no el propio
-  menú). Ambos se detectaron directamente por los errores del compilador de Rust, que son
-  bastante explícitos sobre qué método sí existe.
+  CPU global entre versiones, la API de menús de Tauri 2 no es encadenable, y `zip` 0.6.x
+  tiene una firma distinta a la de versiones más recientes del mismo crate (`FileOptions` no
+  es genérico en 0.6.x). Los tres se detectaron directamente por los errores del compilador.
 
-- **"Siempre encima" no es solo una bandera de la app.** Bajo Wayland (la sesión por defecto
-  en KDE Plasma 6 / Nobara), el compositor no confía en que una aplicación decida por sí
-  misma quedarse por encima de las demás — es una protección de seguridad del protocolo. La
-  solución confiable no fue código, sino una **regla de ventana de KWin** forzando "Mantener
-  por encima" a nivel de sistema operativo.
+- **"Siempre encima" no es solo una bandera de la app.** Bajo Wayland, el compositor no
+  confía en que una aplicación decida por sí misma quedarse por encima de las demás. La
+  solución confiable fue una **regla de ventana de KWin**, no código.
 
-- **`skip_taskbar` desde el código no siempre se respeta al vuelo.** Forzar que la ventana no
-  aparezca en la barra de tareas vía reglas de KWin (`Omitir la barra de tareas`, `Forzar`)
-  solo tomó efecto después de cerrar y volver a crear la ventana — quedó como lección que
-  ciertas propiedades de ventana en Wayland se fijan al momento de creación, no se pueden
-  mutar en una ventana ya existente.
+- **`keyring` necesita un backend explícito en Linux.** La versión 3 del crate no asume con
+  qué gestor de credenciales hablar — hay que activar el feature `sync-secret-service` para
+  que hable con KWallet/Secret Service. Sin eso, falla en tiempo de ejecución sin avisar en
+  la terminal, algo que costó detectar porque el error solo vivía del lado de JavaScript.
 
-- **El arrastre de ventana compite con los eventos del propio JS.** El atributo
-  `data-tauri-drag-region`, necesario para mover la ventana con el mouse, intercepta también
-  el clic derecho antes de que llegue al script — así que la función de "saltar a la
-  siguiente esquina" se migró a clic con el botón central, evitando el conflicto.
+- **GitHub no puede crear un Release en un repo sin commits.** El repo de backups
+  (`zudok-backups`) se creó completamente vacío, sin ni siquiera un `README`. Un Release
+  necesita un tag apuntando a algún commit — sin historial, no hay dónde anclarlo. Se
+  resolvió con un primer commit cualquiera para darle "piso" al repo.
 
 ## 🧩 Plugins disponibles
 
@@ -175,15 +155,18 @@ que esconderlo:
 |---|---|
 | **Gamer HUD** | Overlay flotante y transparente con CPU, RAM, disco y temperatura en tiempo real, estilo barras de videojuego. |
 | **Notas Rápidas** | Notas de texto persistentes con búsqueda en vivo — guardadas en la SQLite del core, sobreviven a cerrar y reabrir la app. |
+| **Pomodoro** | Temporizador de enfoque con anillo de progreso, ciclos de descanso corto/largo automáticos, y contador de pomodoros completados por día. |
+| **Backup Inteligente** | Detecta automáticamente tus proyectos con Git, muestra si cada uno tiene cambios sin subir a GitHub (semáforo verde/amarillo/rojo), y sube un `.zip` de los que elijas como Release a un repo privado dedicado — con limpieza automática de backups viejos. Sin timers, sin servidor propio: solo corre cuando abres la ventana. |
 
 ## 🗺️ Roadmap
 
 - [x] Core: tray icon, atajo global, SQLite compartida, plugin loader
 - [x] Plugin: Gamer HUD (CPU / RAM / Disco / Temperatura)
 - [x] Plugin: notas rápidas persistentes
-- [ ] Plugin: pomodoro / temporizador de enfoque
+- [x] Plugin: pomodoro / temporizador de enfoque
+- [x] Plugin: Backup Inteligente (respaldo a GitHub Releases)
 - [ ] Capa de conexión (Supabase Realtime) para estado compartido entre dos instancias
-- [ ] Mission Control: integración con la API de GitHub
+- [ ] Mission Control: panel de visibilidad sobre repos, PRs e issues vía la API de GitHub
 
 ## 📄 Licencia
 

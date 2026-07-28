@@ -1,9 +1,10 @@
-// Evita que en Windows se abra una consola detrás de la app (no aplica en Linux, no estorba).
+    // Evita que en Windows se abra una consola detrás de la app (no aplica en Linux, no estorba).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod db;
 mod plugin_loader;
 mod tray;
+mod backup;   // ← nuevo
 
 use serde::Serialize;
 use sysinfo::{Components, Disks, System};
@@ -87,6 +88,10 @@ fn main() {
             hide_window,
             db::db_get,
             db::db_set,
+            backup::backup_list_projects,      // ← nuevo
+            backup::backup_has_credentials,    // ← nuevo
+            backup::backup_save_credentials,   // ← nuevo
+            backup::backup_run,                // ← nuevo
         ])
         .setup(|app| {
             let handle = app.handle();

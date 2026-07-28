@@ -1,0 +1,87 @@
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+body {
+  background: #1a1a1e;
+  color: #e8e8ea;
+  overflow: hidden;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #232328;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.titlebar-label { font-size: 13px; font-weight: 600; color: #b8b8bd; }
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #9a9aa0;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.close-btn:hover { background: #3a3a40; color: #fff; }
+
+.setup-form, .main-view { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.setup-hint { font-size: 12px; color: #9a9aa0; margin-bottom: 4px; }
+
+.setup-form input {
+  background: #232328;
+  border: 1px solid #3a3a40;
+  border-radius: 6px;
+  color: #e8e8ea;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+#setup-save, .backup-btn {
+background: #4a7dff;
+border: none;
+border-radius: 6px;
+color: #fff;
+font-size: 13px;
+font-weight: 600;
+padding: 10px;
+cursor: pointer;
+margin-top: 4px;
+}
+#setup-save:hover, .backup-btn:hover { background: #5c8aff; }
+
+.section-label { font-size: 12px; color: #9a9aa0; margin-bottom: 4px; }
+
+.projects-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 320px; }
+
+.project-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #232328;
+  border: 1px solid #3a3a40;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.project-row input { width: 15px; height: 15px; flex-shrink: 0; }
+.project-row .name { flex: 1; font-family: monospace; }
+.days-hint { font-size: 10px; color: #6a6a70; white-space: nowrap; }
+
+.badge { font-size: 10px; padding: 2px 7px; border-radius: 4px; }
+.badge.ok { background: #1f3d2b; color: #6fd88a; }
+.badge.warn { background: #453a1c; color: #e8c15a; }
+.badge.late { background: #452323; color: #e87a7a; }
+
+.status-msg { font-size: 12px; min-height: 16px; color: #9a9aa0; }
