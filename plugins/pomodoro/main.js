@@ -3,6 +3,8 @@ const { invoke } = window.__TAURI__.core;
 const PLUGIN_ID = 'pomodoro';
 const STATS_KEY = 'stats';
 const SETTINGS_KEY = 'settings';
+const SYNC_CONFIG_ID = 'sync-config'; // compartido con Notas Rápidas
+const LAST_SYNC_KEY = 'last_synced_at';
 
 const RING_CIRCUMFERENCE = 326.7; // 2 * PI * r(52), debe coincidir con style.css
 
@@ -15,6 +17,14 @@ const startPauseBtn = document.getElementById('start-pause-btn');
 const resetBtn = document.getElementById('reset-btn');
 const statsFooter = document.getElementById('stats-footer');
 const closeBtn = document.getElementById('close-btn');
+const syncConfigBtn = document.getElementById('sync-config-btn');
+const syncSetup = document.getElementById('sync-setup');
+const mainContent = document.getElementById('main-content');
+const sbUrlInput = document.getElementById('sb-url');
+const sbKeyInput = document.getElementById('sb-key');
+const syncSaveBtn = document.getElementById('sync-save');
+const syncSkipBtn = document.getElementById('sync-skip');
+const syncSetupStatus = document.getElementById('sync-setup-status');
 
 // Duraciones en segundos, configurables por el usuario (por defecto 25/5, clásico).
 let durations = { work: 25 * 60, break: 5 * 60 };
@@ -24,10 +34,18 @@ let remaining = durations.work;
 let running = false;
 let intervalId = null;
 let completedToday = 0;
+let sbUrl = null;
+let sbKey = null;
 
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+// Misma normalización que en Notas Rápidas: acepta la URL completa del
+// endpoint REST pegada por accidente y siempre devuelve solo la base.
+function normalizeSupabaseUrl(raw) {
+  return raw.trim().replace(/\/rest\/v1\/?$/i, '').replace(/\/$/, '');
 }
 
 async function loadSettings() {
@@ -116,6 +134,7 @@ async function onCycleComplete() {
   if (mode === 'work') {
     completedToday += 1;
     await saveStats();
+    pushState().catch((err) => console.error('no se pudo sincronizar el pomodoro completado:', err));
     mode = 'break';
   } else {
     mode = 'work';
@@ -166,6 +185,7 @@ function onDurationInputChange() {
   }
 
   saveSettings();
+  pushState().catch((err) => console.error('no se pudo sincronizar la configuración:', err));
 }
 
 workInput.addEventListener('change', onDurationInputChange);
@@ -192,8 +212,131 @@ closeBtn.addEventListener('click', async (event) => {
   }
 });
 
+// --- Sincronización ---
+// A diferencia de Notas Rápidas, esto no es aditivo: los minutos son una
+// preferencia (gana el cambio más reciente) y el conteo diario se fusiona
+// por el máximo entre ambas máquinas, para nunca perder un pomodoro ganado.
+
+async function loadSyncConfig() {
+  sbUrl = await invoke('db_get', { pluginId: SYNC_CONFIG_ID, key: 'supabase_url' }).catch(() => null);
+  sbKey = await invoke('db_get', { pluginId: SYNC_CONFIG_ID, key: 'supabase_anon_key' }).catch(() => null);
+  return Boolean(sbUrl && sbKey);
+}
+
+function showSyncSetup() {
+  sbUrlInput.value = sbUrl || '';
+  sbKeyInput.value = sbKey || '';
+  syncSetupStatus.textContent = '';
+  mainContent.style.display = 'none';
+  syncSetup.style.display = 'flex';
+}
+
+function hideSyncSetup() {
+  syncSetup.style.display = 'none';
+  mainContent.style.display = 'flex';
+}
+
+syncConfigBtn.addEventListener('click', (event) => {
+  event.stopPropagation();
+  showSyncSetup();
+});
+
+syncSkipBtn.addEventListener('click', (event) => {
+  event.stopPropagation();
+  hideSyncSetup();
+});
+
+syncSaveBtn.addEventListener('click', async (event) => {
+  event.stopPropagation();
+  const url = normalizeSupabaseUrl(sbUrlInput.value);
+  const key = sbKeyInput.value.trim();
+
+  if (!url || !key) {
+    syncSetupStatus.textContent = 'Completa ambos campos.';
+    return;
+  }
+
+  try {
+    await invoke('db_set', { pluginId: SYNC_CONFIG_ID, key: 'supabase_url', value: url });
+    await invoke('db_set', { pluginId: SYNC_CONFIG_ID, key: 'supabase_anon_key', value: key });
+    sbUrl = url;
+    sbKey = key;
+    hideSyncSetup();
+    await pullState();
+  } catch (err) {
+    syncSetupStatus.textContent = 'No se pudo guardar: ' + err;
+  }
+});
+
+async function pushState() {
+  if (!sbUrl || !sbKey) return; // sin configurar todavía
+
+  await fetch(`${sbUrl}/rest/v1/synced_pomodoro?on_conflict=id`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: sbKey,
+      Authorization: `Bearer ${sbKey}`,
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    },
+    body: JSON.stringify({
+      id: 'shared',
+      focus_minutes: durations.work / 60,
+      break_minutes: durations.break / 60,
+      completed_today: completedToday,
+      count_date: todayKey(),
+      updated_at: new Date().toISOString(),
+    }),
+  });
+}
+
+// Trae el estado compartido: los minutos aplican por "el más reciente gana",
+// el conteo diario se fusiona por el máximo (solo si es del mismo día).
+async function pullState() {
+  if (!sbUrl || !sbKey) return;
+
+  try {
+    const resp = await fetch(`${sbUrl}/rest/v1/synced_pomodoro?id=eq.shared&select=*`, {
+      headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` },
+    });
+    if (!resp.ok) throw new Error(`Supabase respondió ${resp.status}`);
+
+    const rows = await resp.json();
+    if (rows.length === 0) return; // nadie ha sincronizado todavía, no hay nada que traer
+
+    const remote = rows[0];
+    const lastSync = (await invoke('db_get', { pluginId: PLUGIN_ID, key: LAST_SYNC_KEY }).catch(() => null))
+      || '1970-01-01T00:00:00Z';
+
+    if (remote.updated_at > lastSync) {
+      durations = { work: remote.focus_minutes * 60, break: remote.break_minutes * 60 };
+      workInput.value = remote.focus_minutes;
+      breakInput.value = remote.break_minutes;
+      if (!running) remaining = durations[mode];
+      await saveSettings();
+    }
+
+    if (remote.count_date === todayKey() && remote.completed_today > completedToday) {
+      completedToday = remote.completed_today;
+      await saveStats();
+    }
+
+    await invoke('db_set', { pluginId: PLUGIN_ID, key: LAST_SYNC_KEY, value: new Date().toISOString() });
+    renderAll();
+  } catch (err) {
+    console.error('pullState falló:', err);
+  }
+}
+
 (async () => {
   await loadSettings();
   await loadStats();
   renderAll();
+
+  const configured = await loadSyncConfig();
+  if (configured) {
+    await pullState();
+  }
+  // Si no está configurado, no forzamos el formulario al abrir — Pomodoro es
+  // una ventana pequeña; siempre puedes configurarlo después con el botón 🔗.
 })();

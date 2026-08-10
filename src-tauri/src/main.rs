@@ -5,6 +5,7 @@ mod db;
 mod plugin_loader;
 mod tray;
 mod backup;   // ← nuevo
+mod mission_control;   // ← nuevo
 
 use serde::Serialize;
 use sysinfo::{Components, Disks, System};
@@ -88,10 +89,15 @@ fn main() {
             hide_window,
             db::db_get,
             db::db_set,
-            backup::backup_list_projects,      // ← nuevo
-            backup::backup_has_credentials,    // ← nuevo
-            backup::backup_save_credentials,   // ← nuevo
-            backup::backup_run,                // ← nuevo
+            backup::backup_list_projects,
+            backup::backup_has_credentials,
+            backup::backup_save_credentials,
+            backup::backup_run,
+            mission_control::mission_control_list_repos,      // ← nuevo
+            mission_control::mission_control_has_credentials,  // ← nuevo
+            mission_control::mission_control_save_credentials, // ← nuevo
+            mission_control::mission_control_fetch_all,        // ← nuevo
+            mission_control::open_in_browser,                  // ← nuevo
         ])
         .setup(|app| {
             let handle = app.handle();

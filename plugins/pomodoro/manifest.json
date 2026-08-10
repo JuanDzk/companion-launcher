@@ -3,7 +3,7 @@
   "name": "Pomodoro",
   "entry": "index.html",
   "width": 260,
-  "height": 300,
+  "height": 330,
   "transparent": true,
   "always_on_top": true,
   "decorations": false,

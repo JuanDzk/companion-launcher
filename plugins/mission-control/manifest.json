@@ -1,0 +1,11 @@
+{
+  "id": "mission-control",
+  "name": "Mission Control",
+  "entry": "index.html",
+  "width": 380,
+  "height": 540,
+  "transparent": false,
+  "always_on_top": false,
+  "decorations": false,
+  "tray_entry": true
+}

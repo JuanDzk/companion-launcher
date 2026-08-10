@@ -12,9 +12,21 @@
       <button class="close-btn" id="close-btn" title="Ocultar">×</button>
     </div>
 
+    <!-- Solo aparece la primera vez, mientras no haya configuración de sincronización guardada -->
+    <div class="sync-setup" id="sync-setup" style="display: none;">
+      <p class="sync-hint">Conecta la sincronización con Nobara-chan (solo se pide una vez, compartido con Pomodoro).</p>
+      <input type="text" id="sb-url" placeholder="URL del proyecto de Supabase" />
+      <input type="password" id="sb-key" placeholder="anon public key" />
+      <button id="sync-save">Guardar y continuar</button>
+      <p class="sync-status" id="sync-setup-status"></p>
+    </div>
+
     <div class="toolbar">
       <input type="text" id="search-input" placeholder="Buscar..." />
+      <button id="sync-btn" title="Buscar notas nuevas de la otra máquina">🔄</button>
+      <button id="sync-config-btn" title="Editar configuración de sincronización">⚙️</button>
     </div>
+    <p class="sync-status" id="sync-status"></p>
 
     <form id="new-note-form" class="new-note-form">
       <textarea id="new-note-text" placeholder="Escribe una nota y presiona Enter..." rows="2"></textarea>

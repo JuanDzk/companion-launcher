@@ -55,10 +55,12 @@ html, body {
 
 .toolbar {
   padding: 10px 12px 6px;
+  display: flex;
+  gap: 6px;
 }
 
 #search-input {
-  width: 100%;
+  flex: 1;
   padding: 7px 10px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -150,4 +152,69 @@ html, body {
 .notes-list::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
+}
+
+/* Sincronización con la otra máquina */
+.sync-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sync-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.4;
+}
+
+.sync-setup input {
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.sync-setup input:focus {
+  border-color: rgba(120, 200, 255, 0.4);
+}
+
+#sync-save {
+  padding: 7px 10px;
+  background: rgba(120, 200, 255, 0.15);
+  border: 1px solid rgba(120, 200, 255, 0.3);
+  border-radius: 6px;
+  color: #cfe9ff;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+#sync-save:hover {
+  background: rgba(120, 200, 255, 0.25);
+}
+
+#sync-btn, #sync-config-btn {
+  flex-shrink: 0;
+  width: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  cursor: pointer;
+}
+#sync-btn:hover, #sync-config-btn:hover {
+  background: rgba(120, 200, 255, 0.15);
+  border-color: rgba(120, 200, 255, 0.3);
+}
+
+.sync-status {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  padding: 0 12px 6px;
+  min-height: 12px;
 }

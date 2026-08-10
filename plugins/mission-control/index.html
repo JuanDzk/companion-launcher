@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mission Control</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar" data-tauri-drag-region>
+      <span class="titlebar-label" data-tauri-drag-region>Mission Control</span>
+      <button class="close-btn" id="close-btn" title="Ocultar">×</button>
+    </div>
+
+    <!-- Solo aparece la primera vez, mientras no haya token guardado -->
+    <div class="setup-form" id="setup-form" style="display: none;">
+      <p class="setup-hint">Token de GitHub de solo lectura, con permiso de "Pull requests" e
+        "Issues" sobre los repos que quieras vigilar (distinto al de Backup Inteligente).</p>
+      <input type="password" id="gh-token" placeholder="github_pat_..." />
+      <button id="setup-save">Guardar y continuar</button>
+      <p class="status-msg" id="setup-status"></p>
+    </div>
+
+    <div class="main-view" id="main-view" style="display: none;">
+      <div class="toolbar">
+        <span class="section-label">Repos con actividad</span>
+        <button id="refresh-btn" title="Buscar cambios">🔄</button>
+        <button id="config-btn" title="Editar token">⚙️</button>
+      </div>
+      <div class="repos-list" id="repos-list"></div>
+      <p class="status-msg" id="status-msg"></p>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
