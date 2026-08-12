@@ -1,16 +1,25 @@
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 button {
   appearance: none;
   -webkit-appearance: none;
+  border: none;
+  background: none;
   font: inherit;
   color: inherit;
   cursor: pointer;
 }
 
-body {
-  background: #1a1a1e;
-  color: #e8e8ea;
+html, body {
+  height: 100%;
+  background: #0a0c10;
+  font-family: 'IBM Plex Mono', 'Consolas', monospace;
+  color: rgba(255, 255, 255, 0.9);
+  user-select: none;
   overflow: hidden;
 }
 
@@ -18,53 +27,81 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  border: 1px solid rgba(120, 200, 255, 0.2);
 }
 
 .titlebar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  background: #232328;
-  -webkit-user-select: none;
-  user-select: none;
+  padding: 8px 10px 8px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: move;
 }
 
-.titlebar-label { font-size: 13px; font-weight: 600; color: #b8b8bd; }
+.titlebar-label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(200, 220, 255, 0.7);
+}
 
 .close-btn {
-  background: none;
-  border: none;
-  color: #9a9aa0;
-  font-size: 16px;
-  padding: 2px 8px;
-  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 15px;
+  line-height: 1;
 }
-.close-btn:hover { background: #3a3a40; color: #fff; }
 
-.setup-form, .main-view { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+.close-btn:hover {
+  background: rgba(255, 95, 95, 0.25);
+  color: #fff;
+}
 
-.setup-hint { font-size: 12px; color: #9a9aa0; line-height: 1.4; }
+.setup-form, .main-view {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.setup-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.4;
+}
 
 .setup-form input {
-  background: #232328;
-  border: 1px solid #3a3a40;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
-  color: #e8e8ea;
+  color: inherit;
+  font-family: inherit;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: 12px;
+  outline: none;
+}
+.setup-form input:focus {
+  border-color: rgba(120, 200, 255, 0.4);
 }
 
 #setup-save {
-  background: #4a7dff;
-  border: none;
+  background: rgba(120, 200, 255, 0.15);
+  border: 1px solid rgba(120, 200, 255, 0.3);
   border-radius: 6px;
-  color: #fff;
-  font-size: 13px;
+  color: #cfe9ff;
+  font-family: inherit;
+  font-size: 12px;
   font-weight: 600;
-  padding: 10px;
+  padding: 9px;
+  margin-top: 2px;
 }
-#setup-save:hover { background: #5c8aff; }
+#setup-save:hover { background: rgba(120, 200, 255, 0.25); }
 
 .toolbar {
   display: flex;
@@ -72,18 +109,21 @@ body {
   gap: 6px;
 }
 
-.section-label { font-size: 12px; color: #9a9aa0; flex: 1; }
+.section-label { font-size: 11px; color: rgba(255, 255, 255, 0.4); flex: 1; }
 
 #refresh-btn, #config-btn {
   width: 26px;
   height: 26px;
-  border: 1px solid #3a3a40;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
-  background: #232328;
-  color: #b8b8bd;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
 }
-#refresh-btn:hover, #config-btn:hover { background: #2c2c33; border-color: #4a7dff; }
+#refresh-btn:hover, #config-btn:hover {
+  background: rgba(120, 200, 255, 0.15);
+  border-color: rgba(120, 200, 255, 0.3);
+}
 
 .repos-list {
   display: flex;
@@ -95,8 +135,8 @@ body {
 }
 
 .repo-card {
-  background: #232328;
-  border: 1px solid #3a3a40;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -108,7 +148,7 @@ body {
   margin-bottom: 6px;
 }
 
-.repo-name { font-family: monospace; font-size: 12px; flex: 1; }
+.repo-name { font-family: inherit; font-size: 12px; flex: 1; }
 
 .badge {
   font-size: 10px;
@@ -116,16 +156,16 @@ body {
   border-radius: 4px;
   white-space: nowrap;
 }
-.badge.pr { background: #1f3350; color: #7fb0ff; }
-.badge.issue { background: #453a1c; color: #e8c15a; }
-.badge.clear { background: #1f3d2b; color: #6fd88a; }
-.badge.err { background: #452323; color: #e87a7a; }
+.badge.pr { background: rgba(120, 200, 255, 0.15); color: #7fb0ff; }
+.badge.issue { background: rgba(255, 200, 90, 0.15); color: #ffc85a; }
+.badge.clear { background: rgba(120, 220, 180, 0.15); color: #78dcb4; }
+.badge.err { background: rgba(255, 95, 109, 0.15); color: #ff5f6d; }
 
 .item-list { display: flex; flex-direction: column; gap: 3px; }
 
 .item-link {
   font-size: 11px;
-  color: #b8b8bd;
+  color: rgba(255, 255, 255, 0.5);
   text-decoration: none;
   display: block;
   overflow: hidden;
@@ -134,4 +174,11 @@ body {
 }
 .item-link:hover { color: #7fb0ff; }
 
-.status-msg { font-size: 12px; color: #9a9aa0; min-height: 16px; }
+.status-msg { font-size: 11px; color: rgba(255, 255, 255, 0.4); min-height: 15px; }
+
+/* Scrollbar discreto */
+.repos-list::-webkit-scrollbar { width: 6px; }
+.repos-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}

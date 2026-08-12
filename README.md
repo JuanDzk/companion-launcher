@@ -130,6 +130,19 @@ cargo tauri build
 
 Genera un `.AppImage` y un `.deb` en `src-tauri/target/release/bundle/`.
 
+### Si solo vas a usar la app (no a desarrollarla)
+
+Si alguien te compartió el archivo `.AppImage` ya generado, no necesitas nada de lo anterior
+(ni Rust, ni Node, ni Tauri CLI) — solo estas librerías del sistema:
+
+```bash
+sudo dnf install webkit2gtk4.1-devel libappindicator-gtk3-devel librsvg2-devel
+```
+
+Luego, clic derecho sobre el `.AppImage` → Propiedades → marca "permitir ejecutar como
+programa" (o corre `chmod +x nombre-del-archivo.AppImage` en terminal) → doble clic para
+abrir. Va a aparecer un ícono nuevo en la bandeja del sistema — ese es el launcher.
+
 ## 🧩 Retos técnicos y cómo se resolvieron
 
 Documentar esto porque el camino real casi nunca es lineal, y creo que vale más mostrarlo
@@ -201,7 +214,97 @@ las dos dependa de un servidor propio encendido:
   gana"; el contador de completados del día se fusiona sumando entre máquinas, calculado del
   lado de Supabase para evitar condiciones de carrera.
 
-## 🧩 Plugins disponibles
+## 📖 Primeros pasos por plugin
+
+Gamer HUD y Notas/Pomodoro (sin sincronización) funcionan apenas los abres, sin configurar
+nada. Los siguientes cuatro sí piden algo la primera vez — aquí está exactamente qué hacer,
+pensado para alguien que nunca ha tocado un token o una base de datos.
+
+### 🔄 Sincronizar Notas Rápidas y Pomodoro entre dos máquinas
+
+Ambos comparten la misma configuración — solo se hace una vez, en cualquiera de los dos.
+
+1. Crea una cuenta gratis en [supabase.com](https://supabase.com) (con GitHub es lo más
+   rápido) → "New project" → dale un nombre, contraseña de base de datos (guárdala en algún
+   lado) y la región más cercana → espera 1-2 minutos a que se cree.
+2. En el menú izquierdo, entra a **SQL Editor** → pega y corre esto (botón "Run"):
+
+```sql
+create table synced_notes (
+  id uuid primary key default gen_random_uuid(),
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+create table synced_pomodoro (
+  id text primary key default 'shared',
+  focus_minutes int not null default 25,
+  break_minutes int not null default 5,
+  completed_today int not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+alter table synced_notes enable row level security;
+create policy "allow all - personal use" on synced_notes for all using (true) with check (true);
+alter table synced_pomodoro enable row level security;
+create policy "allow all - personal use" on synced_pomodoro for all using (true) with check (true);
+
+create or replace function upsert_pomodoro_settings(mins_work int, mins_break int)
+returns void language sql as $$
+  insert into synced_pomodoro (id, focus_minutes, break_minutes, updated_at)
+  values ('shared', mins_work, mins_break, now())
+  on conflict (id) do update
+    set focus_minutes = excluded.focus_minutes,
+        break_minutes = excluded.break_minutes,
+        updated_at = now();
+$$;
+
+create or replace function increment_pomodoro_completed()
+returns void language plpgsql as $$
+begin
+  insert into synced_pomodoro (id, completed_today, updated_at)
+  values ('shared', 1, now())
+  on conflict (id) do update
+    set completed_today = case
+          when synced_pomodoro.updated_at::date = now()::date then synced_pomodoro.completed_today + 1
+          else 1
+        end,
+        updated_at = now();
+end;
+$$;
+```
+
+3. Ve a **Project Settings → API** y copia dos cosas: la **Project URL** y la **anon public
+   key**.
+4. Abre Notas Rápidas o Pomodoro en la app → pega esos dos valores en el formulario que
+   aparece → Guardar. La otra persona pega exactamente los mismos dos valores en su propia
+   máquina, y desde ahí ambas quedan conectadas.
+
+### 💾 Backup Inteligente
+
+1. En GitHub, crea un repositorio **privado y vacío** (sin README) — este va a ser el
+   destino de tus backups, ej. `mis-backups`.
+2. Settings → Developer settings → **Personal access tokens → Fine-grained tokens** →
+   "Generate new token".
+3. **Repository access** → "Only select repositories" → elige el repo que acabas de crear.
+4. **Permissions** → busca "Contents" → cámbialo a **Read and write**.
+5. Genera el token (empieza con `github_pat_...`) y cópialo — solo se muestra una vez.
+6. Abre Backup Inteligente en la app → pega la carpeta donde viven tus proyectos, el nombre
+   del repo (`tu-usuario/mis-backups`), y el token → Guardar.
+
+### 🔭 Mission Control
+
+Usa un token **distinto** al de Backup Inteligente — este solo necesita permiso de lectura.
+
+1. GitHub → Fine-grained tokens → "Generate new token".
+2. **Repository access** → elige los repos que quieras vigilar (pueden ser varios).
+3. **Permissions** → busca "Pull requests" → **Read-only**. Busca "Issues" → **Read-only**.
+   No actives nada de escritura, este plugin nunca modifica nada en GitHub.
+4. Genera y copia el token.
+5. Abre Mission Control en la app → pégalo → Guardar. Reutiliza la misma carpeta de
+   proyectos que configuraste en Backup Inteligente.
+
+
 
 | Plugin | Qué hace |
 |---|---|

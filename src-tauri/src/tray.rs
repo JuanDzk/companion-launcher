@@ -5,7 +5,7 @@ use tauri::AppHandle;
 use crate::plugin_loader;
 
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
-    let plugins = plugin_loader::discover();
+    let plugins = plugin_loader::discover(app);
 
     let menu = Menu::new(app)?;
 

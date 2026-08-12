@@ -111,7 +111,7 @@ fn main() {
                 "Alt+Space",
                 move |_app, _shortcut, event| {
                     if event.state() == ShortcutState::Pressed {
-                        if let Some(first) = plugin_loader::discover()
+                        if let Some(first) = plugin_loader::discover(&handle_for_shortcut)
                             .into_iter()
                             .find(|p| p.tray_entry)
                         {

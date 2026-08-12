@@ -32,14 +32,26 @@ fn default_height() -> f64 {
     240.0
 }
 
-fn plugins_dir() -> PathBuf {
-    // En dev, /plugins vive junto al proyecto. En producción empaquetada,
-    // se resuelve junto al ejecutable (ver tauri.conf.json -> resources si luego lo empaquetas).
-    PathBuf::from("../plugins")
+// En dev (`cargo tauri dev`), la carpeta /plugins vive junto al proyecto y se
+// resuelve con una ruta relativa simple. En una app empaquetada (`cargo tauri
+// build`), esa ruta relativa ya no existe — hay que preguntarle a Tauri dónde
+// quedaron los "resources" que se empaquetaron junto al ejecutable.
+// Esto es justo lo que hacía que el instalador funcionara "vacío" en otra
+// máquina: sin este cambio, la ruta relativa no apunta a nada fuera de tu
+// carpeta de desarrollo.
+fn plugins_dir(app: &AppHandle) -> PathBuf {
+    if cfg!(debug_assertions) {
+        PathBuf::from("../plugins")
+    } else {
+        app.path()
+            .resource_dir()
+            .expect("no se pudo resolver el directorio de recursos de la app")
+            .join("plugins")
+    }
 }
 
-pub fn discover() -> Vec<PluginManifest> {
-    let dir = plugins_dir();
+pub fn discover(app: &AppHandle) -> Vec<PluginManifest> {
+    let dir = plugins_dir(app);
     let mut found = Vec::new();
 
     let entries = match fs::read_dir(&dir) {
@@ -69,13 +81,13 @@ pub fn discover() -> Vec<PluginManifest> {
 }
 
 #[tauri::command]
-pub fn list_plugins() -> Vec<PluginManifest> {
-    discover()
+pub fn list_plugins(app: AppHandle) -> Vec<PluginManifest> {
+    discover(&app)
 }
 
 #[tauri::command]
 pub fn open_plugin_window(app: AppHandle, plugin_id: String) -> Result<(), String> {
-    let manifest = discover()
+    let manifest = discover(&app)
         .into_iter()
         .find(|p| p.id == plugin_id)
         .ok_or_else(|| format!("plugin '{plugin_id}' no encontrado"))?;

@@ -19,6 +19,7 @@
     }
   },
   "bundle": {
+    "resources": ["../plugins"],
     "active": true,
     "targets": ["appimage", "deb"],
     "icon": [
