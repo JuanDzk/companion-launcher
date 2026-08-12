@@ -99,12 +99,21 @@ pub fn open_plugin_window(app: AppHandle, plugin_id: String) -> Result<(), Strin
         return Ok(());
     }
 
+    // Cada ventana nace en un punto ligeramente distinto al de la anterior, para
+    // que no se apilen exactamente unas encima de otras al reiniciar la app —
+    // antes todas nacían fijas en (40,40), lo que obligaba a reacomodarlas a mano
+    // cada vez. El offset se reinicia cada 6 ventanas para no salirse de pantalla.
+    let open_count = app.webview_windows().len() as f64;
+    let step = (open_count % 6.0) * 45.0;
+    let base_x = 40.0 + step;
+    let base_y = 40.0 + step;
+
     let url = WebviewUrl::App(format!("{}/{}", manifest.id, manifest.entry).into());
 
     WebviewWindowBuilder::new(&app, &manifest.id, url)
         .title(&manifest.name)
         .inner_size(manifest.width, manifest.height)
-        .position(40.0, 40.0)
+        .position(base_x, base_y)
         .transparent(manifest.transparent)
         .always_on_top(manifest.always_on_top)
         .decorations(manifest.decorations)
