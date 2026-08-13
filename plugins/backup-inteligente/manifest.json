@@ -5,7 +5,7 @@
   "width": 380,
   "height": 520,
   "transparent": false,
-  "always_on_top": false,
+  "always_on_top": true,
   "decorations": false,
   "tray_entry": true
 }

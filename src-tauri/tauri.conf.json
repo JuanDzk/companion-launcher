@@ -11,7 +11,7 @@
     "windows": [],
     "trayIcon": {
       "iconPath": "icons/icon.png",
-      "iconAsTemplate": true,
+      "iconAsTemplate": false,
       "tooltip": "Companion"
     },
     "security": {
@@ -19,7 +19,9 @@
     }
   },
   "bundle": {
-    "resources": ["../plugins"],
+    "resources": {
+      "../plugins": "plugins"
+    },
     "active": true,
     "targets": ["appimage", "deb"],
     "icon": [
